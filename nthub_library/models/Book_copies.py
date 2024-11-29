@@ -77,26 +77,31 @@ class bookcopies(models.Model):
     #         copy_count = self.search_count([('book_id', '=', self.book_id.id)])
     #         self.name = self.book_id.name +' # '+ str(copy_count + 1)
 
+    AVAILABLE = 'available'
+    LOST = 'lost'
+    BORROWED = 'borrowed'
+    DEFAULT_STATE = AVAILABLE
 
+    STATE_PROGRESS_MAPPING = {
+        LOST: 0,
+        BORROWED: 50,
+        AVAILABLE: 100
+    }
 
     @api.depends('state')
     def _compute_progress(self):
         for rec in self:
-            if rec.state =='lost':
-                progress = 0
-            elif rec.state =='borrowed':
-                progress = 50
-            elif rec.state == 'available':
-                progress =100
-            else:
-                progress = 25
-            rec.progress =progress
+            rec.progress =(rec.state, 25)
 
     @api.depends('start_date', 'duration')
     def _get_end_date(self):
         for record in self:
-            if record.start_date and record.duration:
-                duration_delta = timedelta(days=record.duration, seconds=-1)
-                record.end_date = record.start_date + duration_delta
-            else:
-                record.end_date = record.start_date
+            record.end_date = self.calculate_end_date(record.start_date,
+                                                      record.duration)
+
+    @staticmethod
+    def calculate_end_date(start_date, duration):
+        if not start_date or not duration:
+            return start_date
+        duration_delta = timedelta(days=duration, seconds=-1)
+        return start_date + duration_delta

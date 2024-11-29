@@ -97,44 +97,37 @@ class Author(models.Model):
             else:
                 rec.age = 0
 
+    DRAFT = 'draft'
+    CANCEL = 'cancel'
+    DONE = 'done'
+    IN_CONSULTATION = 'in_consultation'
+
     @api.constrains('data_of_birth')
     def _check_date_birth(self):
-        """Check that the birth date is not in the future.
+        for record in self:
+            if record.data_of_birth:
+                self.validate_date_not_in_future(record.data_of_birth)
 
-                Raises:
-                    ValidationError: If the birth date is greater than
-                    today's date.
-                    """
+    @staticmethod
+    def validate_date_not_in_future(date_of_birth):
+        if date_of_birth > fields.Date.today():
+            raise ValidationError(
+                f'You cannot enter a birth date later than today: {fields.Date.today()}'
+            )
+
+    def set_state(self, state):
         for rec in self:
-            if rec.data_of_birth and rec.data_of_birth > fields.Date.today():
-                raise ValidationError(
-                    f'You cannot enter birth date more than today date:'
-                    f' {fields.Date.today()}')
+            rec.state = state
 
     def action_in_consultation(self):
-        """
-        Perform the action of moving the author to the 'in_consultation' state.
-        """
-        for rec in self:
-            rec.state = 'in_consulation'
+        self.set_state(IN_CONSULTATION)
 
     def action_done(self):
-        """
-         Perform the action of moving the author to the 'done' state.
-        """
-        for rec in self:
-            rec.state = 'done'
+        self.set_state(DONE)
 
     def action_cancel(self):
-        """
-              Perform the action of moving the author to the 'cancel' state.
-              """
-        for rec in self:
-            rec.state = 'cancel'
+        self.set_state(CANCEL)
 
     def action_draft(self):
-        """
-               Perform the action of moving the author to the 'draft' state.
-               """
-        for rec in self:
-            rec.state = 'draft'
+        self.set_state(DRAFT)
+

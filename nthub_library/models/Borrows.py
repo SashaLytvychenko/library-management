@@ -53,26 +53,36 @@ class Borrows(models.Model):
         else:
             self.state = 'draft'
 
-    @api.onchange('borrows_duration')
-    def _onchange_borrows_duration(self):
-        #
-        if self.borrows_duration and self.start_borrow:
-            start_date = fields.Datetime.from_string(self.start_borrow)
-            new_end_date = start_date + timedelta(days=self.borrows_duration)
-            self.end_borrow = new_end_date
+    DRAFT = 'draft'
+    RUNNING = 'running'
+    DELAYED = 'delayed'
+    ENDED = 'ended'
 
     @api.onchange('start_borrow', 'end_borrow')
-    def _onchange_da_tes(self):
+    def states_test(self):
+        today = datetime.now()
+        for record in self:
+            record.state = self.calculate_state(record.start_borrow,
+                                                record.end_borrow, today)
 
-        if self.start_borrow and self.end_borrow:
-            delta = self.end_borrow - self.start_borrow
-            if delta.days < 0:
-                nod = 0
-            else:
-                nod = delta.days
-            self.borrows_duration = nod
-        else:
-            self.borrows_duration = 0
+    @staticmethod
+    def calculate_state(start_borrow, end_borrow, today):
+        if start_borrow and end_borrow:
+            if start_borrow <= today <= end_borrow:
+                return RUNNING
+        return DRAFT
+
+    @api.onchange('borrows_duration')
+    def _onchange_borrows_duration(self):
+        for record in self:
+            if record.borrows_duration and record.start_borrow:
+                record.end_borrow = self.calculate_end_date_from_duration(
+                    record.start_borrow, record.borrows_duration
+                )
+
+    @staticmethod
+    def calculate_end_date_from_duration(start_date, duration):
+        return start_date + timedelta(days=duration)
 
     @api.onchange('book_copy_id')
     def _onchange_book_copy_id(self):

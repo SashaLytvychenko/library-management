@@ -37,17 +37,19 @@ class Books_data(models.Model):
     ispn = fields.Char(string="Isbn")
     invoice = fields.Char(string="Invoice")
 
+    PRIORITY_NORMAL = '0'
+    PRIORITY_LOW = '1'
+    PRIORITY_HIGH = '2'
+    PRIORITY_VERY_HIGH = '3'
+
     @api.depends('copy_ids')
     def _compute_copy_count(self):
-        '''
-        compute_copy_count: Method decorated with @api.depends('copy_ids').
-        This method calculates the value of
-         the copy_count field.
-         It iterates over each record and sets the copy_count field to the length of the copy_ids field.
-        '''
         for book in self:
-            # book.copy_count = len(book.copy_ids)
-            book.copy_count = str(len(book.copy_ids))
+            book.copy_count = self.calculate_copy_count(book.copy_ids)
+
+    @staticmethod
+    def calculate_copy_count(copy_ids):
+        return len(copy_ids)
 
     @api.depends('start_date', 'duration')
     def _get_end_date(self):
