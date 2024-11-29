@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': "Library Management System",
-    'version': '15.0',
+    'version': '17.0',
     'summary': """Library Management System""",
     'description': """Imagine a library where books come to you, where due dates are automatically tracked, and where you can browse and borrow books with ease.
      That's the Odoo Library App: a symphony of automation and convenience that makes it easier than ever to enjoy the magic of books.

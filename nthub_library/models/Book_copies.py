@@ -91,3 +91,12 @@ class bookcopies(models.Model):
             else:
                 progress = 25
             rec.progress =progress
+
+    @api.depends('start_date', 'duration')
+    def _get_end_date(self):
+        for record in self:
+            if record.start_date and record.duration:
+                duration_delta = timedelta(days=record.duration, seconds=-1)
+                record.end_date = record.start_date + duration_delta
+            else:
+                record.end_date = record.start_date
